@@ -106,8 +106,8 @@ export default function create() {
                                             </SelectTrigger>
                                             <SelectContent>
                                                 <SelectGroup>
-                                                <SelectItem value="1">Active</SelectItem>
-                                                <SelectItem value="0">Inactive</SelectItem>
+                                                <SelectItem value="active">Active</SelectItem>
+                                                <SelectItem value="inactive">Inactive</SelectItem>
                                                 </SelectGroup>
                                             </SelectContent>
                                         </Select>

@@ -31,22 +31,25 @@ class PostController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'title' => 'required',
-            'content' => 'required',
-            'category' => 'required',
-            'status' => 'required',
-            'image' => 'nullable|image|max:2048',
+            'title' => 'required|string|max:255',
+            'content' => 'required|string',
+            'category' => 'required|string|max:255',
+            'status' => 'required|in:active,inactive',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
-        $data = $request->all();
+        $data = $request->only(['title', 'content', 'category', 'status']);
         $data['slug'] = \Str::slug($request->title);
         $data['user_id'] = auth()->id();
         
-        $file = $request->file('image');
-        if ($file) {
-            $filename = time() . '_' . $file->getClientOriginalName();
-            $file->storeAs('public/images', $filename);
-            $data['image'] = 'images/' . $filename;
+        // Handle image upload
+        if ($request->hasFile('image')) {
+            $file = $request->file('image');
+            // Generate unique filename
+            $filename = time() . '_' . \Str::random(10) . '.' . $file->getClientOriginalExtension();
+            // Store in storage/app/public/images (accessible via /storage/images/)
+            $path = $file->storeAs('images', $filename, 'public');
+            $data['image'] = $path; // Store the path in the database
         }
         
         Post::create($data);
