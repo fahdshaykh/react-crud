@@ -65,7 +65,6 @@ export default function index({ posts }: { posts: PostType[] }) {
                                         <TableHead>Actions</TableHead>
                                     </TableRow>
                                 </TableHeader>
-
                                  <TableBody>
                                         {posts.map((post, index) => (
                                             <TableRow key={post.id}>
