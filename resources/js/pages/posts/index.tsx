@@ -1,4 +1,4 @@
-import { Head, Link, usePage } from '@inertiajs/react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
 import { PlaceholderPattern } from '@/components/ui/placeholder-pattern';
 import { dashboard } from '@/routes';
 import { Input } from '@/components/ui/input';
@@ -8,6 +8,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { useEffect } from 'react';
 import { toast } from 'sonner';
+import { useRef } from 'react';
+import { debounce } from 'lodash';
+import InertiaPagination from '@/components/inertia-pagination';
 
 interface PostType {
     id: number;
@@ -18,11 +21,43 @@ interface PostType {
     image: string | null;
 }
 
-export default function index({ posts }: { posts: PostType[] }) {
+interface LinksType {
+    url: string;
+    label: string;
+    active: boolean;
+}
+
+interface PostsType {
+    data: PostType[];
+    links: LinksType[];
+    from: number;
+    to: number;
+    total: number;
+}
+
+export default function index({ posts }: { posts: PostsType }) {
 
     const {flash} = usePage<{ flash: { success?: string; error?: string } }>().props;
 
     console.log(posts);
+
+    const handleSearch = useRef(
+        debounce((value: string) => {
+
+            router.get(
+                '/posts',
+                { search: value },
+                {
+                    preserveState: true,
+                    replace: true,
+                }
+            );
+        }, 500)
+    ).current;
+
+    function onSearchChange(value: string) {
+        handleSearch(value);
+    }
 
     useEffect(() => {
         if (flash.success) {
@@ -40,7 +75,7 @@ export default function index({ posts }: { posts: PostType[] }) {
                 <div className="rounded border p-6 shadow-xl">
                     <div className="mb-4 flex items-center justify-between">
                         <div className="relative w-full max-w-sm">
-                            <Input placeholder="Search posts..." className="mb-4" />
+                            <Input placeholder="Search posts..." type='search' onChange={(e) => onSearchChange(e.target.value)} className="mb-4" />
                         </div>
 
                         <Button>
@@ -66,7 +101,7 @@ export default function index({ posts }: { posts: PostType[] }) {
                                     </TableRow>
                                 </TableHeader>
                                  <TableBody>
-                                        {posts.map((post, index) => (
+                                        {posts.data?.map((post, index) => (
                                             <TableRow key={post.id}>
                                                 <TableCell>{index + 1}</TableCell>
                                                 <TableCell>
@@ -100,6 +135,7 @@ export default function index({ posts }: { posts: PostType[] }) {
                             </Table>
                         </CardContent>
                     </Card>
+                    <InertiaPagination posts={posts} />
                 </div>
             </div>
         </>

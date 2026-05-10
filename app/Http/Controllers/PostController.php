@@ -13,7 +13,14 @@ class PostController extends Controller
      */
     public function index()
     {
-        $posts = Post::with('user')->latest()->get();
+        $posts = Post::with('user')->latest();
+        if ($search = request('search')) {
+            $posts->where(function($query) use ($search) {
+                $query->where('title', 'like', "%{$search}%")
+                      ->orWhere('content', 'like', "%{$search}%");
+            });
+        }
+        $posts = $posts->paginate(3)->withQueryString();
         return Inertia::render('posts/index', compact('posts'));
     }
 
