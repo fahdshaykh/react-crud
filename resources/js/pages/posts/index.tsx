@@ -59,6 +59,13 @@ export default function index({ posts }: { posts: PostsType }) {
         handleSearch(value);
     }
 
+    function postDelete(id: number) {
+        if (confirm('Are you sure you want to delete this post?')) {
+            router.delete(`/posts/${id}`);
+            toast.success('Post deleted successfully');
+        }
+    }
+
     useEffect(() => {
         if (flash.success) {
             toast.success(flash.success);
@@ -125,7 +132,7 @@ export default function index({ posts }: { posts: PostsType }) {
                                                             Edit
                                                         </Link>
                                                     </Button>
-                                                    <Button size={'sm'} variant={'destructive'}>
+                                                    <Button size={'sm'} onClick={() => postDelete(post.id)} variant={'destructive'}>
                                                         Delete
                                                     </Button>
                                                 </TableCell>

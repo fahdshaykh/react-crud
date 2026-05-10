@@ -4,7 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Models\Post;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
+use StreamBucket;
 
 class PostController extends Controller
 {
@@ -77,7 +79,10 @@ class PostController extends Controller
      */
     public function edit(Post $post)
     {
-        //
+        $post->load('user');
+        return Inertia::render('posts/edit', [
+            'postData' => $post,
+        ]);
     }
 
     /**
@@ -85,7 +90,33 @@ class PostController extends Controller
      */
     public function update(Request $request, Post $post)
     {
-        //
+        $request->validate([
+            'title' => 'required|string|max:255',
+            'content' => 'required|string',
+            'category' => 'required|string|max:255',
+            'status' => 'required|in:active,inactive',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+        ]);
+
+        $data = $request->only(['title', 'content', 'category', 'status']);
+        $data['slug'] = \Str::slug($request->title);
+        
+        // Handle image upload
+        if ($request->hasFile('image')) {
+
+            Storage::disk('public')->delete($post->image);
+
+            $file = $request->file('image');
+            // Generate unique filename
+            $filename = time() . '_' . \Str::random(10) . '.' . $file->getClientOriginalExtension();
+            // Store in storage/app/public/images (accessible via /storage/images/)
+            $path = $file->storeAs('images', $filename, 'public');
+            $data['image'] = $path; // Store the path in the database
+        }
+        
+        $post->update($data);
+
+        return redirect()->route('posts.index')->with('success', 'Post updated successfully.');
     }
 
     /**
@@ -93,6 +124,11 @@ class PostController extends Controller
      */
     public function destroy(Post $post)
     {
-        //
+        if ($post->image) {
+            Storage::disk('public')->delete($post->image);
+        }
+        $post->delete();
+
+        // return redirect()->route('posts.index')->with('success', 'Post deleted successfully.');
     }
 }
